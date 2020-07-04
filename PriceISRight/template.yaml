@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Web scraper based on AWS Lambda functions
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  PriceISRightDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: PriceISRight
+      AttributeDefinitions:
+        -
+          AttributeName: ASIN
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: ASIN
+          KeyType: "HASH"
+
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+  PriceISRight:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: web_scraper
+      Handler: main/app.lambda_handler
+      MemorySize: 128
+      Runtime: python3.7
+      Role: arn:aws:iam::254801889402:role/service-role/LambdaRole
+      Events:
+        PriceISRightScheduleEvent:
+          Type: Schedule # More info about CloudWatchEvent Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#cloudwatchevent
+          Properties:
+            Schedule: 'rate(2 minutes)'
+            Name: PriceISRightSchedule
+            Description: Schedule to trigger AWS Lambda function
+            Enabled: True
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  PriceISRight:
+    Description: "PriceISRight ARN"
+    Value: !GetAtt PriceISRight.Arn
+  #PriceISRightRole:
+    #Description: "Implicit IAM Role created for PricrISRightFunction function"
+    #Value: !GetAtt PriceISRightRole.Arn
