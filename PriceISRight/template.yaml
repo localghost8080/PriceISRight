@@ -9,6 +9,22 @@ Globals:
     Timeout: 3
 
 Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaFullAccess
+
   PriceISRightDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -33,7 +49,7 @@ Resources:
       Handler: main/app.lambda_handler
       MemorySize: 128
       Runtime: python3.7
-      Role: arn:aws:iam::254801889402:role/service-role/LambdaRole
+      Role: !GetAtt LambdaRole.Arn
       Events:
         PriceISRightScheduleEvent:
           Type: Schedule # More info about CloudWatchEvent Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#cloudwatchevent
@@ -50,6 +66,6 @@ Outputs:
   PriceISRight:
     Description: "PriceISRight ARN"
     Value: !GetAtt PriceISRight.Arn
-  #PriceISRightRole:
-    #Description: "Implicit IAM Role created for PricrISRightFunction function"
-    #Value: !GetAtt PriceISRightRole.Arn
+  PriceISRightRole:
+    Description: "Named IAM Role created for PricrISRightFunction function"
+    Value: !GetAtt LambdaRole.Arn
